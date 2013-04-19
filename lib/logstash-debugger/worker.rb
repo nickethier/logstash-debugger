@@ -33,6 +33,7 @@ class LSDebugger::Worker
         klass = plugin[:plugin]
         instance = klass.new(plugin[:parameters])
         instance.logger = logger
+        instance.register
         @filters << instance
       end
     end
