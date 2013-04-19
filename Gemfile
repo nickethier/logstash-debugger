@@ -1,9 +1,9 @@
 source 'https://rubygems.org'
 
-gem 'logstash', :path => '../logstash2/'
+gem 'logstash', :git => 'git://github.com/logstash/logstash.git'
 gem 'sinatra'
 gem 'json'
-gem "resque"
+gem 'sidekiq'
 gem 'rake'
-gem 'dm-core'
+gem 'dm-core', :git => 'https://github.com/datamapper/dm-core.git', :branch => 'release-1.2'
 gem 'dm-redis-adapter'

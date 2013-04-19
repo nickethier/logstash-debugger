@@ -2,18 +2,28 @@ require 'logstash'
 require 'logstash/event'
 require 'logstash/config/file'
 require 'logstash/logging'
-require "logstash/util"
+require 'logstash/util'
 require 'logstash-debugger/model/config'
 require 'logstash-debugger'
 
 class LSDebugger::Worker
-  @queue = :filterworker
 
-  def self.perform(id, event)
+  attr_reader :event
+
+  def initialize(event)
+    puts event
+    @event = event
+  end
+
+  def <<(event)
+    @event.log_data = @event.log_data + "\n" + event.inspect rescue event.inspect
+    @event.save
+  end
+
+  def self.perform(data, event)
     @filters = []
-    data = LSDebugger::Config.first(:guid => id)
 
-    logger = LogStash::Logger.new(STDERR)
+    logger = LogStash::Logger.new(LSDebugger::Worker.new(event))
     logger.level = :debug
     config = LogStash::Config::File.new(nil, data.config)
     config.logger = logger
@@ -39,22 +49,25 @@ class LSDebugger::Worker
     filterworker = LogStash::FilterWorker.new(@filters, @filter_queue,
                                                     @output_queue)
     filterworker.logger = logger
-    thread = Thread.new(filterworker, 0, @output_queue) do |*args|
+    filterworker.after_filter do |e, f|
+      t = LSDebugger::Transition.new(:filter => f.to_s, :raw => e.to_json)
+      event.transitions << t
+      event.save
+    end
+
+    thread = Thread.new(filterworker, 0, @output_queue, logger) do |*args|
       run_filter(*args)
     end
 
-    @filter_queue << LogStash::Event.from_json(event)
-
-    data.events << LSDebugger::Event.from_event(@output_queue.pop)
-    data.save
-  rescue Resque::TermException => e
-    puts e.inspect
+    @filter_queue << LogStash::Event.from_json(event.raw)
+    sleep(10) #TODO handle flushed/yielded events?
+    @filter_queue << LogStash::SHUTDOWN
   end
 
-  def self.run_filter(filterworker, index, output_queue)
+  def self.run_filter(filterworker, index, output_queue, logger)
     LogStash::Util::set_thread_name("|worker.#{index}")
     filterworker.run
-    @logger.warn("Filter worker shutting down", :index => index)
+    logger.warn("Filter worker shutting down", :index => index)
 
     # If we get here, the plugin finished, check if we need to shutdown.
     #shutdown_if_none_running(LogStash::FilterWorker, output_queue)

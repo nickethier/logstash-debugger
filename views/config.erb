@@ -1,0 +1,56 @@
+<h2>Config - <%=@config.guid%></h2>
+<pre><%=@config.config%></pre>
+<h3>Events <small><a class="btn btn-small" href="#newEventModal" data-toggle="modal"><i class="icon-plus"></i> New</a></small></h3>
+<table class="table table-condensed">
+  <tbody>
+    <%@config.events.each do |event|%>
+    <tr>
+      <td><a href="<%=@config.guid%>/events/<%=event.guid%>"><%=event.guid%></a></td>
+      <td><%=event.raw[0..100]%>...</td>
+    </tr>
+    <%end%>
+  </tbody>
+</table>
+
+<div id="newEventModal" class="modal hide fade" style="width: 720px; margin-left: -330px;">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+    <h3>New Event</h3>
+  </div>
+  <div class="modal-body">
+    <form id="newEventForm">
+      <fieldset>
+        <label>Format</label>
+        <select id="format">
+          <option>plain</option>
+          <option>json</option>
+          <option>json_event</option>
+        </select>
+        <label>Event</label>
+        <textarea id="event" class="input-block-level" rows="10"></textarea>
+      </fieldset>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <a id="sendNewEvent" href="#" class="btn btn-primary">Create</a>
+    <div id="eventBar" class="progress progress-striped active" style="display: none;">
+      <div class="bar" style="width: 100%;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+$(function(){
+  $("#sendNewEvent").click(function(){
+    d = {"format": $("#format").val(), "event": $("#event").val()}
+    $.post('<%=@config.guid%>/events.json', JSON.stringify(d), function(data){
+      $('#eventBar').show();
+      setTimeout(function(){
+        document.location.href = "<%=@config.guid%>/events/" + JSON.parse(data).event_id
+      }, 1000);
+    })
+  })
+});
+
+</script>

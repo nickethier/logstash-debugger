@@ -1,0 +1,26 @@
+<div class="alert alert-block">
+  <h4>You Should Probably Read This!</h4>
+  By using this tool you agree that you are solely responsible for the data you put into it. Any data is subject to deletion as this tool is changing often. Have a great day.
+</div>
+
+<form id="newEventForm">
+  <label>Filter Config</label>
+    <textarea id="config" placeholder="filter{ noop{ } }" class="input-block-level" rows="20"></textarea>
+  </fieldset>
+</form>
+<a id="newConfig" href="#" class="btn btn-primary">Create</a>
+  <div id="bar" class="progress progress-striped active" style="display: none;">
+    <div class="bar" style="width: 100%;"></div>
+  </div>
+</div>
+
+<script>
+$(function(){
+  $('#newConfig').click(function(){
+    d = {"config": $("#config").val()}
+    $.post('/debugger.json',JSON.stringify(d), function(data){
+      document.location.href = "/debugger/" + JSON.parse(data).config_id
+    });
+  });
+});
+</script>

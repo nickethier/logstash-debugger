@@ -1,0 +1,15 @@
+<h2><a href="/debugger/<%=@config.guid%>">Config</a></h2>
+<pre><%=@config.config%></pre>
+<h3>Original Event</h3>
+<pre><%=JSON.pretty_generate(JSON.parse(@event.raw))%></pre>
+<h3>Filters</h3>
+<div class="well">
+  <%@transitions.each do |t|%>
+    <h4><%=t['filter']%></h4>
+    <%= t['diff'] %>
+  <%end%>
+</div>
+<h3>Filtered Event</h3>
+<pre><%=@state%></pre>
+<h3>Logs</h3>
+<pre><%=@event.log_data%></pre>
